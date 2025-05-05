@@ -21,7 +21,7 @@ A revolutionary multimodal AI system that transforms spoken narrative descriptio
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/nebula-architect.git
+git clone https://github.com/Omdeepb69/nebula-architect.git
 cd nebula-architect
 ```
 
