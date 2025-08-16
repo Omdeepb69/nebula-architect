@@ -39,10 +39,34 @@ class NebulaSystem:
         try:
             self.logger.info("Initializing system components...")
             
-            # Initialize audio processor
-            if self.config.get("audio", {}).get("enabled", True):
-                self.audio_processor = AudioProcessor(self.config, self.device)
-                self.logger.info("Audio processor initialized")
+            # Initialize audio processor (optional for testing)
+            audio_enabled = self.config.get("audio", {}).get("enabled", False)  # Default to False
+            if audio_enabled:
+                self.logger.info("Audio processing enabled - this may take several minutes for first-time setup...")
+                try:
+                    # Set timeout for audio processor initialization
+                    import signal
+                    import time
+                    
+                    def timeout_handler(signum, frame):
+                        raise TimeoutError("Audio processor initialization timed out")
+                    
+                    # Set 5-minute timeout
+                    signal.signal(signal.SIGALRM, timeout_handler)
+                    signal.alarm(300)  # 5 minutes
+                    
+                    self.audio_processor = AudioProcessor(self.config, self.device)
+                    signal.alarm(0)  # Cancel timeout
+                    self.logger.info("Audio processor initialized")
+                    
+                except (TimeoutError, Exception) as e:
+                    signal.alarm(0)  # Cancel timeout
+                    self.logger.warning(f"Audio processor failed to initialize: {e}")
+                    self.logger.info("Continuing without audio processing - using text input fallback")
+                    self.audio_processor = None
+            else:
+                self.logger.info("Audio processing disabled - using text input only")
+                self.audio_processor = None
             
             # Initialize world generator
             self.world_generator = WorldGenerator(self.config, self.device)
@@ -193,7 +217,7 @@ def load_config(config_path: str) -> Dict[str, Any]:
                 "smooth_meshes": False,
                 "subdivide_meshes": False
             },
-            "audio": {"enabled": True},
+            "audio": {"enabled": False},  # Disabled by default to prevent hanging
             "physics": {"enabled": True},
             "agents": {"enabled": True},
             "world_generation": {"enabled": True},
@@ -260,6 +284,10 @@ def main():
                       help="Output directory for rendered frames")
     parser.add_argument("--interactive", action="store_true", default=True,
                       help="Run in interactive mode")
+    parser.add_argument("--no-audio", action="store_true", default=False,
+                      help="Disable audio processing (use text input only)")
+    parser.add_argument("--test-mode", action="store_true", default=False,
+                      help="Run in test mode with minimal components")
     args = parser.parse_args()
     
     # Set up logging
@@ -270,6 +298,11 @@ def main():
         # Load configuration
         config = load_config(args.config)
         device = torch.device(args.device)
+        
+        # Override audio setting based on command line arguments
+        if args.no_audio or args.test_mode:
+            config["audio"]["enabled"] = False
+            logger.info("Audio processing disabled via command line")
         
         logger.info(f"Using device: {device}")
         logger.info(f"Config loaded from: {args.config}")
