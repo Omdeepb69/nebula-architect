@@ -1,0 +1,73 @@
+# NEBULA Architect Configuration
+
+# System Settings
+system:
+  device: "cuda"  # or "cpu"
+  num_workers: 4
+  batch_size: 32
+  seed: 42
+
+# Model Settings
+models:
+  whisper:
+    model_size: "large-v2"
+    device: "cuda"
+    compute_type: "float16"
+  
+  stable_diffusion:
+    model_id: "stabilityai/stable-diffusion-2-1"
+    num_inference_steps: 50
+    guidance_scale: 7.5
+    
+  nerf:
+    num_rays: 1024
+    num_samples: 64
+    near_plane: 0.1
+    far_plane: 100.0
+    
+  physics:
+    gravity: -9.81
+    timestep: 1/60
+    max_steps: 1000
+
+# Rendering Settings
+rendering:
+  resolution:
+    width: 1920
+    height: 1080
+  fps: 60
+  antialiasing: true
+  shadows: true
+  ambient_occlusion: true
+
+# Audio Settings
+audio:
+  sample_rate: 16000
+  channels: 1
+  chunk_size: 1024
+  format: "float32"
+
+# Agent Settings
+agents:
+  max_agents: 100
+  interaction_radius: 10.0
+  update_frequency: 30
+  behavior_weights:
+    social: 0.3
+    task: 0.4
+    exploration: 0.3
+
+# World Generation
+world:
+  max_size: 1000.0
+  min_size: 100.0
+  terrain_resolution: 256
+  vegetation_density: 0.3
+  water_level: 0.0
+
+# Performance Settings
+performance:
+  use_mixed_precision: true
+  enable_caching: true
+  cache_size: 1000
+  parallel_processing: true 
